@@ -50,49 +50,26 @@ def choose_n(total, sample_size):
     return list(itertools.combinations(range(1, total + 1), sample_size))
 
 
-def make_pdbs(puzzle_num: int, strengths: list[int],
-              goal: str, problem: problems.Problem) -> dict[int:dict[tuple[int]:dict[str:int]]]:
+def make_pdbs(
+        puzzle_no: int, strengths: list[int], goal: str,
+        problem: problems.Problem) -> dict[int:dict[tuple[int]:dict[str:int]]]:
+    """Constructs PDBs for a problem space."""
     pdbs = {}
     for strength in strengths:
         pdbs[strength] = {}
-        for pattern in choose_n(puzzle_num, strength):
+        for pattern in choose_n(puzzle_no, strength):
             print(f"Constructing PDB by merging these tile IDs: {pattern}")
             new_goal = abstractify(goal, pattern)
             pdbs[strength][pattern] = search.make_pdb(new_goal, problem)
     return pdbs
 
 
-def main():
-    """Completes data generation for Assignment 1.
-    Assumes GoalState.txt, Problems.txt, and ExperimentalData.xlsx are in the
-    same directory, in the form they were provided on Canvas.
-    Takes a few minutes at best - you might want to put the kettle on.
-    """
-
-    random.seed(42)  # I used 42 for the experiments
-    with open("GoalState.txt") as file:
-        goal = file.read().strip()
-    problem = problems.TileProblem(goal)
-
-    with open("Problems.txt") as file:
-        contents = file.readlines()
-    initial_states = [state.strip() for state in contents]
-
-    puzzle_num = 8  # For the 8-puzzle, this is set to 8
-    strengths = [7, 5, 3]
-    patterns = {
-        strength: choose_n(puzzle_num, strength)
-        for strength in strengths
-    }
-
-    # WARNING: This will use up hundreds of megabytes with default settings.
-    # It will save a few minutes execution next time, however.
-    # Choose wisely.
-    use_file = True
-    pdb_location = "PDBs.txt"
-
-    if use_file and os.path.isfile(pdb_location):
-        with open(pdb_location) as file:
+def get_pdbs(
+        filename: str, puzzle_no: int, strengths: list[int], goal: str,
+        problem: problems.Problem) -> dict[int:dict[tuple[int]:dict[str:int]]]:
+    """Attempts to retrieve PDB file. If not found, makes from scratch."""
+    if os.path.isfile(filename):
+        with open(filename) as file:
             print("Reading existing PDB file...")
             pdbs_string = file.read()
         print("Loading PDBs (this may take a few minutes)...")
@@ -101,59 +78,104 @@ def main():
 
     else:
         print("Generating PDBs from scratch - this will take a wee while.")
-        pdbs = make_pdbs(puzzle_num, strengths, goal, problem)
+        pdbs = make_pdbs(puzzle_no, strengths, goal, problem)
         print("All PDBs constructed.")
-        if use_file:
-            print("Writing PDBs to file for later...")
-            with open(pdb_location, "w") as file:
-                file.write(str(pdbs))
+        print("Writing PDBs to file for later...")
+        with open(filename, "w") as file:
+            file.write(str(pdbs))
 
-    address = "ExperimentalData.xlsx"
-    ExperimentalData = openpyxl.load_workbook(address)
-    Sheet1 = ExperimentalData["Sheet1"]
 
-    runs = 100
-    print("Running experiments...")
+def run_experiments(initial_states, problem, puzzle_no, strengths, sizes, pdbs,
+                    runs):
+    """Runs experiments for Assignment 1."""
+    patterns = {
+        strength: choose_n(puzzle_no, strength)
+        for strength in strengths
+    }
+    results = []
+
     for strength in strengths:
         for size in sizes:
             sample_size = int(len(patterns[strength]) * size)
-            for index, state in enumerate(initial_states):
-                averages = []
+            for problem_no, state in enumerate(initial_states):
+                means = []
                 stdevs = []
                 for _ in range(runs):
                     h_values = []
-                    sample = random.sample(patterns[strength], sample_size)
-                    for pattern in sample:
+                    for pattern in random.sample(patterns[strength],
+                                                 sample_size):
+                        pdb = pdbs[strength][pattern]
                         abstract_state = abstractify(state, pattern)
                         abstract_state = problem.canonical(abstract_state)
-                        pdb = pdbs[strength][pattern]
                         h_values.append(pdb[abstract_state])
-                    averages.append(statistics.mean(h_values))
+                    means.append(statistics.mean(h_values))
                     stdevs.append(statistics.stdev(h_values))
+                mean = statistics.mean(means)
+                mean_stdev = statistics.mean(stdevs)
+                results.append((size, strength, problem_no, mean, mean_stdev))
 
-                mean_cell = excel_cell_A1(size, strength, index, False)
-                stdev_cell = excel_cell_A1(size, strength, index, True)
-                Sheet1[mean_cell] = statistics.mean(averages)
-                Sheet1[stdev_cell] = statistics.mean(stdevs)
+    return results
 
-    print("Experiments finished. Adding final touches...")
+
+def write_to_excel(results, filename, sheetname):
+    """Writes Assignment 1 results to an Excel sheet."""
+    workbook = openpyxl.load_workbook(filename)
+    sheet = workbook[sheetname]
+
+    for size, strength, problem_no, mean, stdev in results:
+        mean_cell = excel_cell_A1(size, strength, problem_no, False)
+        stdev_cell = excel_cell_A1(size, strength, problem_no, True)
+        sheet[mean_cell] = mean
+        sheet[stdev_cell] = stdev
 
     for col in "CDEFGH":
         row = 27
         for _ in range(len(sizes)):
-            Sheet1[col + str(row)] = f"=AVERAGE({col}{row-25}:{col}{row-1})"
+            sheet[col + str(row)] = f"=AVERAGE({col}{row-25}:{col}{row-1})"
             row += 27
-
     for col in "CEG":
         row = 28
         for _ in range(len(sizes)):
-            Sheet1[col + str(row)] = f"={col}{row-1}/20"
+            sheet[col + str(row)] = f"={col}{row-1}/20"
             row += 27
 
-    ExperimentalData.save(address)
+    workbook.save(filename)
 
+
+def main(use_file=True):
+    """Completes data generation for Assignment 1.
+    Assumes GoalState.txt, Problems.txt, and ExperimentalData.xlsx are in the
+    same directory, in the form they were provided on Canvas.
+    Takes a few minutes at best - you might want to put the kettle on.
+    """
+    random.seed(42)  # I used 42 for the experiments
+
+    with open("GoalState.txt") as file:
+        goal = file.read().strip()
+    problem = problems.TileProblem(goal)
+
+    with open("Problems.txt") as file:
+        contents = file.readlines()
+    states = [state.strip() for state in contents]
+
+    puzzle_no = 8  # For the 8-puzzle, this is set to 8
+    strengths = [7, 5, 3]
+
+    # WARNING: This will use up hundreds of megabytes with default settings.
+    # It will save a few minutes execution next time, however.
+    # Choose wisely.
+    if use_file:
+        pdbs = get_pdbs("PDBs.txt", puzzle_no, strengths, goal, problem)
+    else:
+        pdbs = make_pdbs(puzzle_no, strengths, goal, problem)
+
+    print("Running experiments...")
+    results = run_experiments(states, problem, puzzle_no, strengths, sizes,
+                              pdbs, 100)
+    print("Experiments finished. Recording results...")
+    write_to_excel(results, "ExperimentalData.xlsx", "Sheet1")
     print("Done!")
 
 
 if __name__ == "__main__":
-    main()
+    main(True)
