@@ -93,16 +93,23 @@ def get_pdbs(
 
     else:
         print("Generating PDBs from scratch - this will take a wee while.")
-        pdbs = make_pdbs(puzzle_no, strengths, goal, problem)
+        pdbs = make_pdbs(puzzle_no, strengths, problem)
         print("All PDBs constructed.")
         print("Writing PDBs to file for later...")
         with open(filename, "w") as file:
             file.write(str(pdbs))
 
 
-def run_experiments(initial_states, problem, puzzle_no, strengths, sizes, pdbs,
-                    runs):
+def run_experiments(initial_states,
+                    problem,
+                    puzzle_no,
+                    strengths,
+                    sizes,
+                    pdbs=None,
+                    runs=100):
     """Runs experiments for Assignment 1."""
+    if pdbs == None:
+        pdbs = make_pdbs(puzzle_no, strengths, problem)
     patterns = {
         strength: choose_n(puzzle_no, strength)
         for strength in strengths
@@ -178,7 +185,7 @@ def main(use_file=True):
 
     print("Running experiments...")
     results = run_experiments(states, problem, puzzle_no, strengths, sizes,
-                              pdbs, 100)
+                              pdbs)
     print("Experiments finished. Recording results...")
     write_to_excel(results, "ExperimentalData.xlsx", "Sheet1")
     print("Done!")
