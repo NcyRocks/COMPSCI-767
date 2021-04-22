@@ -49,6 +49,17 @@ def choose_n(total, sample_size):
     unordered S-tuples of integers up to N."""
     return list(itertools.combinations(range(1, total + 1), sample_size))
 
+def a1_problems(goal_file = "GoalState.txt", problem_file = "Problems.txt"):
+    """Returns the default problems for Assignment 1."""
+    with open("GoalState.txt") as file:
+        goal = file.read().strip()
+    problem = problems.TileProblem(goal)
+
+    with open("Problems.txt") as file:
+        contents = file.readlines()
+    states = [state.strip() for state in contents]
+
+    return problem, states
 
 def make_pdbs(
         puzzle_no: int, strengths: list[int], goal: str,
@@ -149,15 +160,7 @@ def main(use_file=True):
     Takes a few minutes at best - you might want to put the kettle on.
     """
     random.seed(42)  # I used 42 for the experiments
-
-    with open("GoalState.txt") as file:
-        goal = file.read().strip()
-    problem = problems.TileProblem(goal)
-
-    with open("Problems.txt") as file:
-        contents = file.readlines()
-    states = [state.strip() for state in contents]
-
+    problem, states = a1_problems()
     puzzle_no = 8  # For the 8-puzzle, this is set to 8
     strengths = [7, 5, 3]
 
