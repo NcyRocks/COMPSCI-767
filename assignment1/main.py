@@ -50,6 +50,18 @@ def choose_n(total, sample_size):
     return list(itertools.combinations(range(1, total + 1), sample_size))
 
 
+def make_pdbs(puzzle_num: int, strengths: list[int],
+              goal: str, problem: problems.Problem) -> dict[int:dict[tuple[int]:dict[str:int]]]:
+    pdbs = {}
+    for strength in strengths:
+        pdbs[strength] = {}
+        for pattern in choose_n(puzzle_num, strength):
+            print(f"Constructing PDB by merging these tile IDs: {pattern}")
+            new_goal = abstractify(goal, pattern)
+            pdbs[strength][pattern] = search.make_pdb(new_goal, problem)
+    return pdbs
+
+
 def main():
     """Completes data generation for Assignment 1.
     Assumes GoalState.txt, Problems.txt, and ExperimentalData.xlsx are in the
@@ -89,13 +101,7 @@ def main():
 
     else:
         print("Generating PDBs from scratch - this will take a wee while.")
-        pdbs = {}
-        for strength in strengths:
-            pdbs[strength] = {}
-            for pattern in patterns[strength]:
-                print(f"Constructing PDB by merging these tile IDs: {pattern}")
-                new_goal = abstractify(goal, pattern)
-                pdbs[strength][pattern] = search.make_pdb(new_goal, problem)
+        pdbs = make_pdbs(puzzle_num, strengths, goal, problem)
         print("All PDBs constructed.")
         if use_file:
             print("Writing PDBs to file for later...")
