@@ -185,4 +185,4 @@ def main(use_file=True):
 
 
 if __name__ == "__main__":
-    main(True)
+    main()
