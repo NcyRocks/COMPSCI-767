@@ -49,7 +49,8 @@ def choose_n(total, sample_size):
     unordered S-tuples of integers up to N."""
     return list(itertools.combinations(range(1, total + 1), sample_size))
 
-def a1_problems(goal_file = "GoalState.txt", problem_file = "Problems.txt"):
+
+def a1_problems(goal_file="GoalState.txt", problem_file="Problems.txt"):
     """Returns the default problems for Assignment 1."""
     with open("GoalState.txt") as file:
         goal = file.read().strip()
@@ -61,11 +62,13 @@ def a1_problems(goal_file = "GoalState.txt", problem_file = "Problems.txt"):
 
     return problem, states
 
+
 def make_pdbs(
-        puzzle_no: int, strengths: list[int], goal: str,
+        puzzle_no: int, strengths: list[int],
         problem: problems.Problem) -> dict[int:dict[tuple[int]:dict[str:int]]]:
-    """Constructs PDBs for a problem space."""
+    """Constructs abstracted PDBs for a problem space."""
     pdbs = {}
+    goal = str(problem)
     for strength in strengths:
         pdbs[strength] = {}
         for pattern in choose_n(puzzle_no, strength):
@@ -76,9 +79,10 @@ def make_pdbs(
 
 
 def get_pdbs(
-        filename: str, puzzle_no: int, strengths: list[int], goal: str,
+        filename: str, puzzle_no: int, strengths: list[int],
         problem: problems.Problem) -> dict[int:dict[tuple[int]:dict[str:int]]]:
     """Attempts to retrieve PDB file. If not found, makes from scratch."""
+    goal = str(problem)
     if os.path.isfile(filename):
         with open(filename) as file:
             print("Reading existing PDB file...")
@@ -165,12 +169,12 @@ def main(use_file=True):
     strengths = [7, 5, 3]
 
     # WARNING: This will use up hundreds of megabytes with default settings.
-    # It will save a few minutes execution next time, however.
+    # It will save a couple of minutes' execution next time, however.
     # Choose wisely.
     if use_file:
-        pdbs = get_pdbs("PDBs.txt", puzzle_no, strengths, goal, problem)
+        pdbs = get_pdbs("PDBs.txt", puzzle_no, strengths, problem)
     else:
-        pdbs = make_pdbs(puzzle_no, strengths, goal, problem)
+        pdbs = make_pdbs(puzzle_no, strengths, problem)
 
     print("Running experiments...")
     results = run_experiments(states, problem, puzzle_no, strengths, sizes,
