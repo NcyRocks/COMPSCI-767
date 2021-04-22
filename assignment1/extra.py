@@ -34,16 +34,52 @@ def main():
         stdevs[strength].append(stdev)
 
     for strength in strengths:
-        means[strength] = statistics.mean(means[strengths])
-        stdevs[strength] = statistics.mean(stdevs[strengths])
+        means[strength] = statistics.mean(means[strength])
+        stdevs[strength] = statistics.mean(stdevs[strength])
 
     mean_list = []
     stdev_list = []
     for i in range(1, 9):
         mean_list.append(means[i])
-        stdev_list.append(stdev[i])
+        stdev_list.append(stdevs[i])
 
-    plt.plot(numpy.linspace(0, puzzle_no, puzzle_no), mean_list, label="Means")
+
+    plt.errorbar(range(1, 9),
+                 mean_list,
+                 yerr=stdev_list,
+                 label="Compressed solution cost")
+    plt.plot(range(1, 9), [20] * 8, label="True cost")
+    plt.ylabel("Solution length")
+    plt.xlabel("No. tile IDs merged (N)")
+    plt.legend()
+    plt.show()
+
+    estimates = [mean_list[i] + (mean_list[i] - mean_list[i+1]) * (i-1) for i in range(2, 7)]
+    plt.errorbar(range(1, 9),
+                 mean_list,
+                 yerr=stdev_list,
+                 label="Compressed solution cost")
+    plt.plot(range(1, 9), [20] * 8, label="True cost")
+    plt.plot(range(3, 8),
+             estimates,
+             label="Predicted costs with extrapolation approach")
+    plt.ylabel("Solution length")
+    plt.xlabel("No. tile IDs merged (N)")
+    plt.legend()
+    plt.show()
+
+    predictions = [mean_list[i] + stdev_list[i] * (i - 1) for i in range(2, 7)]
+    print(predictions)
+    plt.errorbar(range(1, 9),
+                 mean_list,
+                 yerr=stdev_list,
+                 label="Compressed solution cost")
+    plt.plot(range(1, 9), [20] * 8, label="True cost")
+    plt.plot(range(3, 8),
+             predictions,
+             label="Predicted costs with stddev approach")
+    plt.ylabel("Solution length")
+    plt.xlabel("No. tile IDs merged (N)")
     plt.legend()
     plt.show()
 
