@@ -131,7 +131,10 @@ def run_experiments(initial_states,
                         abstract_state = problem.canonical(abstract_state)
                         h_values.append(pdb[abstract_state])
                     means.append(statistics.mean(h_values))
-                    stdevs.append(statistics.stdev(h_values))
+                    try: # May only have one PDB if using all tile IDs
+                        stdevs.append(statistics.stdev(h_values))
+                    except statistics.StatisticsError:
+                        stdevs.append(0) # In which case no stdev is appropriate
                 mean = statistics.mean(means)
                 mean_stdev = statistics.mean(stdevs)
                 results.append((size, strength, problem_no, mean, mean_stdev))

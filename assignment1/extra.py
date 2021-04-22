@@ -16,7 +16,8 @@ def main():
     puzzle_no = 8  # For the 8-puzzle, this is set to 8
     strengths = [8, 7, 6, 5, 4, 3, 2, 1]
 
-    # Can't save to file; too big!
+    # Can't save pdbs to file; too big!
+    # Next best thing: saving the results
     if os.path.isfile("results.txt"):
         with open("results.txt") as file:
             contents = file.read()
