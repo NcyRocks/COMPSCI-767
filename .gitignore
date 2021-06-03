@@ -122,3 +122,5 @@ dmypy.json
 .pyre/
 assignment1/PDBs.txt
 assignment1/results.txt
+*.pdf
+*.lnk
