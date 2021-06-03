@@ -1,7 +1,8 @@
 *.xlsx
-*.txt
 .vscode
 Writeup
+.lnk
+.pdf
 
 # Below is deafult Python gitignore
 
