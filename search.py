@@ -226,5 +226,4 @@ def weighted_a_star_with_bounds(start,
                 heapq.heappush(g_heap, (g, neighbour))
                 parents[neighbour] = current
 
-    # This doesn't include all values but I don't expect to run into this situation soon
-    return infinity, [None]
+    return infinity, [None], F, f_iter, g_min, g_iter, infinity, infinity
