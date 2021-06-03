@@ -44,6 +44,7 @@ class TileProblem(Problem):
             self.adjacencies[first].add(second)
 
         self.as_string = self.canonical(text)
+        self.distances = {} # Distances between given locations
 
     def remove_brackets(self, string: str) -> str:
         """Given a string with brackets, returns the brackets' contents."""
@@ -157,3 +158,40 @@ class TileProblem(Problem):
                     new_state = self.dict_to_str(new_locations)
                     next_states.add((1, new_state))
         return next_states
+
+    def ensure_in_distance_dict(self, from_location, to_location):
+        key = f"{from_location}->{to_location}"
+        if key in self.distances:
+            return
+        current_nodes = {from_location}
+        distance = 0
+        explored_nodes = set()
+        new_nodes = set()
+        while key not in self.distances:
+            for node in current_nodes:
+                new_key = f"{from_location}->{node}"
+                if new_key not in self.distances:
+                    self.distances[new_key] = distance
+                explored_nodes.add(node)
+                new_nodes.update(self.adjacencies[node])
+            current_nodes.update(new_nodes)
+            current_nodes.difference_update(explored_nodes)
+            distance += 1
+                
+
+    def manhattan_distance(self, state: str) -> Number:
+        from_locations = self.str_to_dict(state)
+        locations = self.str_to_dict(self.as_string)
+        to_locations = {piece: location for location, piece in locations.items() if piece is not None}
+
+        distance = 0
+
+        for from_location, piece in from_locations.items():
+            if piece is None:
+                continue
+            to_location = to_locations[piece]
+            self.ensure_in_distance_dict(from_location, to_location)
+            key = f"{from_location}->{to_location}"
+            distance += self.distances[key]
+
+        return distance

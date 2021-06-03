@@ -1,0 +1,1 @@
+state([adj(a,b),adj(a,d),adj(b,a),adj(b,c),adj(b,e),adj(c,b),adj(c,f),adj(d,a),adj(d,e),adj(d,g),adj(e,d),adj(e,f),adj(e,b),adj(e,h),adj(f,e),adj(f,i),adj(f,c),adj(g,d),adj(g,h),adj(h,g),adj(h,e),adj(h,i),adj(i,f),adj(i,h),at(1,a),at(2,b),at(3,c),at(4,d),at(5,e),at(6,f),at(7,g),at(8,h),blank(i)]).
